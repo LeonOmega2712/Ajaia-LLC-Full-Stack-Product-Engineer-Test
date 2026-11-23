@@ -1,0 +1,110 @@
+"use client";
+
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { Placeholder } from "@tiptap/extensions";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCallback, useState } from "react";
+import type { AccessLevel } from "@/lib/access/policy";
+import { api } from "@/lib/apiClient";
+import type { ShareRecord, UserSummary } from "@/lib/documents/types";
+import { useAutosave } from "@/lib/useAutosave";
+import { AccessBadge } from "../AccessBadge";
+import { SaveIndicator } from "./SaveIndicator";
+import { SharePanel } from "./SharePanel";
+import { Toolbar } from "./Toolbar";
+
+interface Props {
+  id: string;
+  initialTitle: string;
+  initialContent: string;
+  access: AccessLevel;
+  owner: UserSummary;
+  initialShares: ShareRecord[];
+}
+
+type Patch = { title?: string; content?: string };
+
+export function DocumentEditor({ id, initialTitle, initialContent, access, owner, initialShares }: Props) {
+  const router = useRouter();
+  const editable = access === "OWNER" || access === "EDITOR";
+  const isOwner = access === "OWNER";
+  const [title, setTitle] = useState(initialTitle);
+
+  const save = useCallback(
+    (patch: Patch) => api(`/api/documents/${id}`, { method: "PATCH", body: JSON.stringify(patch) }).then(() => undefined),
+    [id],
+  );
+  // Title and content autosave independently so a slow edit in one never drops the other.
+  const titleSave = useAutosave<string>((t) => save({ title: t }));
+  const contentSave = useAutosave<string>((html) => save({ content: html }));
+
+  const editor = useEditor({
+    extensions: [StarterKit, Placeholder.configure({ placeholder: "Start writing..." })],
+    content: initialContent,
+    editable,
+    immediatelyRender: false,
+    editorProps: { attributes: { class: "doc-content" } },
+    onUpdate: ({ editor: e }) => contentSave.schedule(e.getHTML()),
+  });
+
+  function onTitleChange(value: string) {
+    setTitle(value);
+    if (value.trim()) titleSave.schedule(value);
+  }
+
+  async function onDelete() {
+    if (!window.confirm("Delete this document permanently?")) return;
+    await api(`/api/documents/${id}`, { method: "DELETE" });
+    router.push("/");
+    router.refresh();
+  }
+
+  const titleInvalid = !title.trim();
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
+      <div className="min-w-0">
+        <div className="mb-3 flex items-center gap-3">
+          <Link href="/" className="text-sm text-gray-500 hover:text-gray-800" onClick={() => void Promise.all([titleSave.flush(), contentSave.flush()])}>
+            ← Documents
+          </Link>
+          <AccessBadge access={access} />
+          <div className="ml-auto">
+            <SaveIndicator statuses={[titleSave, contentSave]} readOnly={!editable} />
+          </div>
+        </div>
+        <input
+          value={title}
+          onChange={(e) => onTitleChange(e.target.value)}
+          onBlur={() => void titleSave.flush()}
+          readOnly={!editable}
+          maxLength={200}
+          aria-label="Document title"
+          className={`mb-3 w-full rounded border bg-transparent px-2 py-1 text-2xl font-semibold outline-none focus:border-blue-400 ${titleInvalid ? "border-red-400" : "border-transparent hover:border-gray-300"}`}
+        />
+        {titleInvalid && <p className="mb-2 text-sm text-red-600">Title cannot be empty; the last valid title is kept.</p>}
+        <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+          {editor && editable && <Toolbar editor={editor} />}
+          {!editable && (
+            <p className="border-b border-gray-200 bg-amber-50 px-4 py-2 text-sm text-amber-800">
+              You have view-only access. Ask {owner.name} for edit access.
+            </p>
+          )}
+          <div className="px-8 py-6">
+            <EditorContent editor={editor} />
+          </div>
+        </div>
+      </div>
+      <aside className="space-y-4">
+        <SharePanel documentId={id} owner={owner} initialShares={initialShares} canManage={isOwner} />
+        {isOwner && (
+          <button onClick={onDelete} className="w-full rounded border border-red-200 px-3 py-2 text-sm text-red-700 hover:bg-red-50">
+            Delete document
+          </button>
+        )}
+      </aside>
+    </div>
+  );
+}
