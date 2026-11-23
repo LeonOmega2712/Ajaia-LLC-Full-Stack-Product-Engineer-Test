@@ -66,9 +66,19 @@ Running log of how this project was built, kept up to date during development. S
 - Turned off Vercel Authentication (deployment protection) so reviewers can open the URL without a Vercel account.
 - Verified end to end on production: Alice creates and shares a document, Carol sees it under "Shared with me".
 
+### 8:13 PM · Human intervention point: choosing stretch work by cost
+- After confirming that every required feature was done (only `.docx` left out, which the brief lists as an optional example), Jonathan reviewed the optional stretch list and **decided to add stretch features chosen for their low implementation cost relative to how demonstrable they are**, rather than the most technically impressive ones.
+- Options weighed: real-time presence and comments (high cost), version history (medium cost, more technical weight), export to Markdown/PDF (low cost, easy to show). Export was picked first; the same cost/value filter applies to any further additions.
+
+### 8:15 PM · Stretch: export to Markdown and PDF
+- **Markdown:** `turndown` converts the live editor HTML on the client, so unsaved keystrokes are included. Underline is kept as inline `<u>` because Markdown has no syntax for it; strikethrough becomes `~~text~~`. File name is derived from the title and sanitized (accents removed, unsafe characters stripped).
+- **PDF:** `window.print()` with a print stylesheet that hides header, toolbar, share panel and buttons. **Tradeoff:** chose this over a PDF library (jsPDF/html2canvas) because it adds no dependency, keeps text selectable and lets the browser paginate; the cost is one click on "Save as PDF" in the print dialog.
+- **Permissions:** export is available to every access level that can open the document, including viewers (reading already implies being able to copy the content).
+- **Verification:** 3 new tests (all toolbar formats to Markdown, round-trip through the importer, file names), 19 total passing. Browser check as Carol (viewer): downloaded `Smoke-doc.md` with the expected content; print-media screenshot shows only title and content. Fixed a small misalignment of the title in print found in that screenshot.
+
 ## Deliberately cut
 - Real-time co-editing and presence (biggest jump in complexity). Concurrent saves are last-write-wins.
-- Comments, version history, export.
+- Comments, version history.
 - Real auth, sign-up, email notifications.
 - `.docx` import, attachments.
 
@@ -81,7 +91,7 @@ Running log of how this project was built, kept up to date during development. S
 ## Suggested video script (3 to 5 min)
 1. **(0:00 to 0:30) Intro.** What it is, the stack, the live URL. "I focused on one loop that works end to end instead of many shallow features."
 2. **(0:30 to 2:00) Main flow as Alice.** Create a document, rename it, format (heading, bold, underline, list), point at "All changes saved", reload to show persistence. Import a `.md` file and show headings/lists preserved. Mention .txt/.md only, 1 MB limit.
-3. **(2:00 to 3:00) Sharing.** Share with Carol as Viewer and Bob as Editor. Open a second window as Carol: "Shared with me", view-only banner. As Bob: can edit. Remove Bob's access and show he gets "Document not available".
+3. **(2:00 to 3:00) Sharing.** Share with Carol as Viewer and Bob as Editor. (Optionally show Export .md and Export PDF here.) Open a second window as Carol: "Shared with me", view-only banner. As Bob: can edit. Remove Bob's access and show he gets "Document not available".
 4. **(3:00 to 3:45) Implementation decisions.** Pure policy module + service layer + repository interface; 404 vs 403; HTML storage tradeoff; autosave with two channels; tests run without a DB.
-5. **(3:45 to 4:15) Deprioritized.** Real-time collaboration, comments, history, real auth, .docx. What comes next: conflict detection, version history, export.
+5. **(3:45 to 4:15) Deprioritized.** Real-time collaboration, comments, history, real auth, .docx. Mention the stretch choice: after the core was done, picked export because it was cheap and easy to demo. What comes next: conflict detection, version history.
 6. **(4:15 to 5:00) AI workflow.** What Claude Code sped up, what you decided yourself, the layout bug caught from a screenshot, how you verified (tests, build, browser run).

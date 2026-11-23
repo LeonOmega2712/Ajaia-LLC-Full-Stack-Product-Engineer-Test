@@ -48,7 +48,7 @@ export function Toolbar({ editor }: { editor: Editor }) {
 
   let index = 0;
   return (
-    <div className="sticky top-14 z-10 flex flex-wrap gap-1 rounded-t-lg border-b border-gray-200 bg-white px-2 py-1.5">
+    <div className="sticky top-14 z-10 flex print:hidden flex-wrap gap-1 rounded-t-lg border-b border-gray-200 bg-white px-2 py-1.5">
       {BUTTON_GROUPS.map((group, g) => (
         <div key={g} className="flex gap-1 border-r border-gray-200 pr-1 last:border-r-0">
           {group.map((b) => {

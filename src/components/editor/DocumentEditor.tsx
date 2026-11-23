@@ -11,6 +11,7 @@ import { api } from "@/lib/apiClient";
 import type { ShareRecord, UserSummary } from "@/lib/documents/types";
 import { useAutosave } from "@/lib/useAutosave";
 import { AccessBadge } from "../AccessBadge";
+import { ExportMenu } from "./ExportMenu";
 import { SaveIndicator } from "./SaveIndicator";
 import { SharePanel } from "./SharePanel";
 import { Toolbar } from "./Toolbar";
@@ -64,14 +65,15 @@ export function DocumentEditor({ id, initialTitle, initialContent, access, owner
   const titleInvalid = !title.trim();
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_280px]">
+    <div className="grid gap-6 lg:grid-cols-[1fr_280px] print:block">
       <div className="min-w-0">
-        <div className="mb-3 flex items-center gap-3">
+        <div className="mb-3 flex items-center gap-3 print:hidden">
           <Link href="/" className="text-sm text-gray-500 hover:text-gray-800" onClick={() => void Promise.all([titleSave.flush(), contentSave.flush()])}>
             ← Documents
           </Link>
           <AccessBadge access={access} />
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-3">
+            <ExportMenu editor={editor} title={title} />
             <SaveIndicator statuses={[titleSave, contentSave]} readOnly={!editable} />
           </div>
         </div>
@@ -82,22 +84,22 @@ export function DocumentEditor({ id, initialTitle, initialContent, access, owner
           readOnly={!editable}
           maxLength={200}
           aria-label="Document title"
-          className={`mb-3 w-full rounded border bg-transparent px-2 py-1 text-2xl font-semibold outline-none focus:border-blue-400 ${titleInvalid ? "border-red-400" : "border-transparent hover:border-gray-300"}`}
+          className={`mb-3 w-full rounded border bg-transparent px-2 py-1 print:px-0 text-2xl font-semibold outline-none focus:border-blue-400 ${titleInvalid ? "border-red-400" : "border-transparent hover:border-gray-300"}`}
         />
-        {titleInvalid && <p className="mb-2 text-sm text-red-600">Title cannot be empty; the last valid title is kept.</p>}
-        <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+        {titleInvalid && <p className="mb-2 print:hidden text-sm text-red-600">Title cannot be empty; the last valid title is kept.</p>}
+        <div className="rounded-lg border border-gray-200 bg-white shadow-sm print:border-0 print:shadow-none">
           {editor && editable && <Toolbar editor={editor} />}
           {!editable && (
-            <p className="border-b border-gray-200 bg-amber-50 px-4 py-2 text-sm text-amber-800">
+            <p className="border-b border-gray-200 bg-amber-50 print:hidden px-4 py-2 text-sm text-amber-800">
               You have view-only access. Ask {owner.name} for edit access.
             </p>
           )}
-          <div className="px-8 py-6">
+          <div className="px-8 py-6 print:p-0">
             <EditorContent editor={editor} />
           </div>
         </div>
       </div>
-      <aside className="space-y-4">
+      <aside className="space-y-4 print:hidden">
         <SharePanel documentId={id} owner={owner} initialShares={initialShares} canManage={isOwner} />
         {isOwner && (
           <button onClick={onDelete} className="w-full rounded border border-red-200 px-3 py-2 text-sm text-red-700 hover:bg-red-50">

@@ -24,8 +24,8 @@ No password. Pick one on the sign-in screen: `alice@ajaia.test` (owner of a seed
 
 ## Status
 
-**Working end to end:** create, rename, rich-text editing, autosave, delete, .txt/.md import into a new document, sharing by email with Editor/Viewer roles and revoke, owned vs shared lists, persistence in Postgres, validation and error messages, 16 automated tests.
+**Working end to end:** create, rename, rich-text editing, autosave, delete, .txt/.md import into a new document, sharing by email with Editor/Viewer roles and revoke, owned vs shared lists, persistence in Postgres, validation and error messages, export to Markdown and PDF (stretch), 19 automated tests.
 
-**Not included (deliberate):** real-time co-editing, comments, version history, export, real authentication, .docx import. Concurrent edits are last-write-wins.
+**Not included (deliberate):** real-time co-editing, comments, version history, real authentication, .docx import. Concurrent edits are last-write-wins.
 
-**Next with 2 to 4 more hours:** conflict detection on save, version history, Markdown/PDF export, .docx import, Playwright E2E test in CI.
+**Next with 2 to 4 more hours:** conflict detection on save, version history, .docx import, Playwright E2E test in CI.

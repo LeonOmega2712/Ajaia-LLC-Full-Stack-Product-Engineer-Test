@@ -42,13 +42,13 @@ access/policy.ts   DocumentRepository (port)
 - **Mocked auth with a signed cookie.** No passwords; the cookie holds the user id with an HMAC so it cannot be trivially edited to impersonate another user. Not production auth (no expiry rotation, no CSRF token beyond SameSite=Lax).
 - **Last write wins.** Two editors on the same document at the same time will overwrite each other's saves. Real-time collaboration (Yjs/CRDT) was deliberately cut; it is the biggest jump in complexity.
 - **Upload scope: .txt and .md into a new document.** Both convert cleanly to the editor's formats. Raw HTML in markdown is escaped. `.docx` was cut because it needs a heavier converter for marginal demo value.
+- **Export (stretch):** Markdown is generated client-side from the live editor with `turndown` (underline has no Markdown syntax, so it is kept as inline `<u>`). PDF uses `window.print()` plus a print stylesheet instead of a PDF library: zero extra dependencies, selectable text, and the browser handles pagination. The cost is one extra click in the print dialog ("Save as PDF").
 - **Title and content autosave independently** (two debounced channels), so a rename never races with a content save.
 
 ## Intentionally deprioritized
 
 - Real-time co-editing and presence indicators
 - Comments, suggestions, version history
-- Export (PDF/Markdown)
 - Real authentication, user sign-up, email notifications on share
 - Pagination/search on the document list
 - `.docx` import and attachments
@@ -57,6 +57,5 @@ access/policy.ts   DocumentRepository (port)
 
 1. Optimistic concurrency: send `updatedAt` with saves and warn on conflicts instead of silently overwriting.
 2. Version history (snapshot on save every N minutes) with restore.
-3. Export to Markdown/PDF.
-4. `.docx` import via `mammoth`.
-5. Playwright end-to-end test of the share flow in CI.
+3. `.docx` import via `mammoth`.
+4. Playwright end-to-end test of the share flow in CI.
