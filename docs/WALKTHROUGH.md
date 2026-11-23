@@ -146,6 +146,17 @@ Running log of how this project was built, kept up to date during development. S
   5. **Nit:** after being sent to login from a document, sign-in went to the dashboard. **Fix:** `/login?next=...` returns to the document; only same-origin relative paths are accepted (no open redirect).
 - Verified locally: 34 tests, build, and a browser run (malformed POST returns 400, login returns to the original document).
 
+### 9:04 PM · Human intervention: independent SOLID audit by a second AI
+- **Jonathan ran an independent audit of SOLID and good practices with a second AI (his local Claude) as auditor**, separate from the session that wrote the code, and then **prioritized what to apply by value versus risk** one hour before recording: data integrity and cheap fixes now, pure refactors later.
+- Verdict of the audit: the layering holds (policy pure, small repository ports, one error-to-HTTP wrapper); the serious finding was atomicity.
+- **Applied** (one PR, tests in `tests/solidAudit.test.ts`):
+  1. **High (#1 + #2):** the history snapshot and the conditional write ran outside a transaction, so a save that lost the race left an orphan snapshot, and the repository re-read the document in a second query. **Fix:** a `UnitOfWork` port; the Prisma adapter runs snapshot, compare-and-set and re-read in one interactive transaction. Repositories are built from a client (`createPrismaRepositories(client)`) so they work inside or outside a transaction, and an explicit `toDocumentRecord` mapper replaces the type cast. Restore also snapshots and writes in one transaction (it overwrites on purpose, documented). Checked against Postgres: 5 parallel saves on the same base version give 1 × 200, 4 × 409 and exactly 1 snapshot.
+  2. **Medium (#3):** error bodies are now `{ error, details }`, so a details key can never overwrite the message. The malformed-JSON part of this finding had already been fixed by the QA pass (PR #6).
+  3. **Medium (#4, minimal):** deleting a document now shows an error if it fails. Restore was already surfaced by the version history panel.
+  4. **Low (#6):** sharing with an unknown email returns a generic message that does not echo the address or demo hints (the demo hint lives in the UI placeholder).
+- **Deferred as next steps** (refactors with no visible change, too risky right before recording): extract a `useDocumentSync` hook from `DocumentEditor`, share access checks and limits between server and UI, the `useAutosave` details, structured logging with request ids, and moving the remaining direct Prisma calls in login behind the user repository. Listed in `ARCHITECTURE.md`.
+- As part of the same review, **Jonathan asked for a code map** to review the code file by file: `docs/CODE_MAP.md`, one line of responsibility per main file, grouped by layer.
+
 ## Deliberately cut
 - Real-time co-editing (CRDT). Concurrent saves are detected (409) and resolved by the user instead.
 - Comments and suggestion mode.
@@ -180,6 +191,8 @@ Every decision and direction that came from Jonathan (times America/Mexico_City)
 | 8:34 PM | Asked to remove the CI database password flagged by GitGuardian, without adding a repository secret. |
 | 8:37 PM | **Decided to run manual end-to-end QA on production with a real-browser agent before recording the video.** |
 | 8:44 PM | **Decided to apply every QA fix**, nits included, and to document the QA pass as part of his decisions. |
+| 9:04 PM | **Used a second AI (his local Claude) as an independent SOLID and good-practices auditor, and prioritized which findings to apply by value versus risk before recording** (transaction for save + snapshot, error body shape, delete feedback, generic share message; refactors deferred). |
+| 9:08 PM | **Asked for a code map (`docs/CODE_MAP.md`) as part of his review process**: one line per main file, grouped by layer. |
 
 ## AI usage notes (for AI_WORKFLOW.md)
 - Used Claude Code for scaffolding, implementation, tests, docs drafts and the scripted browser check.
