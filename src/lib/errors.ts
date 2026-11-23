@@ -3,6 +3,8 @@ export class AppError extends Error {
   constructor(
     message: string,
     readonly status: number,
+    /** Optional structured payload returned to the client alongside the message. */
+    readonly details?: Record<string, unknown>,
   ) {
     super(message);
     this.name = new.target.name;
@@ -30,5 +32,11 @@ export class ForbiddenError extends AppError {
 export class NotFoundError extends AppError {
   constructor(message = "Not found.") {
     super(message, 404);
+  }
+}
+
+export class ConflictError extends AppError {
+  constructor(message: string, details?: Record<string, unknown>) {
+    super(message, 409, details);
   }
 }

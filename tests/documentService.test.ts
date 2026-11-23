@@ -14,14 +14,14 @@ describe("DocumentService sharing flow", () => {
   let docId: string;
 
   beforeEach(async () => {
-    const { docRepo, userRepo } = createInMemoryRepos(users);
-    service = new DocumentService(docRepo, userRepo);
+    const { docRepo, userRepo, versionRepo } = createInMemoryRepos(users);
+    service = new DocumentService(docRepo, userRepo, versionRepo);
     docId = (await service.create("alice", { title: "Plan", content: "<p>v1</p>" })).id;
   });
 
   it("hides documents from users without access (404, not 403)", async () => {
     await expect(service.get("bob", docId)).rejects.toBeInstanceOf(NotFoundError);
-    await expect(service.update("bob", docId, { content: "<p>x</p>" })).rejects.toBeInstanceOf(NotFoundError);
+    await expect(service.update("bob", docId, { content: "<p>x</p>", baseVersion: 0 })).rejects.toBeInstanceOf(NotFoundError);
   });
 
   it("separates owned and shared documents in the list", async () => {
@@ -34,7 +34,7 @@ describe("DocumentService sharing flow", () => {
 
   it("lets an editor change content and title, but not sharing or deletion", async () => {
     await service.share("alice", docId, "bob@ajaia.test", "EDITOR");
-    const updated = await service.update("bob", docId, { title: "Plan v2", content: "<p>v2</p>" });
+    const updated = await service.update("bob", docId, { title: "Plan v2", content: "<p>v2</p>", baseVersion: 0 });
     expect(updated).toMatchObject({ title: "Plan v2", content: "<p>v2</p>" });
     await expect(service.share("bob", docId, "carol@ajaia.test", "EDITOR")).rejects.toBeInstanceOf(ForbiddenError);
     await expect(service.delete("bob", docId)).rejects.toBeInstanceOf(ForbiddenError);
@@ -43,7 +43,7 @@ describe("DocumentService sharing flow", () => {
   it("keeps viewers read-only", async () => {
     await service.share("alice", docId, "carol@ajaia.test", "VIEWER");
     expect((await service.get("carol", docId)).access).toBe("VIEWER");
-    await expect(service.update("carol", docId, { content: "<p>hack</p>" })).rejects.toBeInstanceOf(ForbiddenError);
+    await expect(service.update("carol", docId, { content: "<p>hack</p>", baseVersion: 0 })).rejects.toBeInstanceOf(ForbiddenError);
   });
 
   it("revokes access when a share is removed", async () => {

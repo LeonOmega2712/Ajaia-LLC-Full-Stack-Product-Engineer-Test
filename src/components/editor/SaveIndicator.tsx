@@ -7,8 +7,9 @@ interface Saver {
 }
 
 /** Combines several autosave channels into one status label (worst state wins). */
-export function SaveIndicator({ statuses, readOnly }: { statuses: Saver[]; readOnly: boolean }) {
+export function SaveIndicator({ statuses, readOnly, conflict = false }: { statuses: Saver[]; readOnly: boolean; conflict?: boolean }) {
   if (readOnly) return <span className="text-sm text-gray-500">Read only</span>;
+  if (conflict) return <span className="text-sm text-amber-700">Not saved: conflict</span>;
   const failed = statuses.find((s) => s.status === "error");
   if (failed) {
     return (

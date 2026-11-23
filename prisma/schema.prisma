@@ -10,26 +10,33 @@ datasource db {
 }
 
 model User {
-  id        String          @id @default(cuid())
-  email     String          @unique
+  id        String             @id @default(cuid())
+  email     String             @unique
   name      String
-  createdAt DateTime        @default(now())
+  createdAt DateTime           @default(now())
   documents Document[]
   shares    DocumentShare[]
+  edits     Document[]         @relation("LastEditor")
+  versions  DocumentVersion[]
   presence  DocumentPresence[]
 }
 
 model Document {
-  id        String          @id @default(cuid())
-  title     String
+  id          String             @id @default(cuid())
+  title       String
   /// Rich text stored as TipTap-generated HTML (schema-constrained by the editor).
-  content   String          @default("")
-  ownerId   String
-  owner     User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  shares    DocumentShare[]
-  presence  DocumentPresence[]
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
+  content     String             @default("")
+  ownerId     String
+  owner       User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  shares      DocumentShare[]
+  /// Optimistic-concurrency counter: incremented on every save.
+  version     Int                @default(0)
+  updatedById String?
+  updatedBy   User?              @relation("LastEditor", fields: [updatedById], references: [id], onDelete: SetNull)
+  versions    DocumentVersion[]
+  presence    DocumentPresence[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
 
   @@index([ownerId])
 }
@@ -50,6 +57,20 @@ model DocumentShare {
 
   @@unique([documentId, userId])
   @@index([userId])
+}
+
+/// Point-in-time snapshot of a document, used for version history and restore.
+model DocumentVersion {
+  id          String   @id @default(cuid())
+  documentId  String
+  title       String
+  content     String
+  createdById String?
+  createdAt   DateTime @default(now())
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  createdBy   User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([documentId, createdAt])
 }
 
 /// Last heartbeat of a user viewing a document; "active" means seen within a short window.

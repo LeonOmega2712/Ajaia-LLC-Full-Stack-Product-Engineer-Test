@@ -17,7 +17,11 @@ export const contentSchema = z
 export const createDocumentSchema = z.object({ title: titleSchema.optional(), content: contentSchema.optional() });
 
 export const updateDocumentSchema = z
-  .object({ title: titleSchema.optional(), content: contentSchema.optional() })
+  .object({
+    title: titleSchema.optional(),
+    content: contentSchema.optional(),
+    baseVersion: z.number({ message: "baseVersion is required." }).int().min(0),
+  })
   .refine((v) => v.title !== undefined || v.content !== undefined, "Nothing to update.");
 
 export const shareSchema = z.object({
