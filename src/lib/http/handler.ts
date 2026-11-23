@@ -10,7 +10,7 @@ export function withErrors<C>(handler: Handler<C>): Handler<C> {
       return await handler(req, ctx);
     } catch (err) {
       if (err instanceof AppError) {
-        return NextResponse.json({ error: err.message }, { status: err.status });
+        return NextResponse.json({ error: err.message, ...err.details }, { status: err.status });
       }
       console.error(err);
       return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });

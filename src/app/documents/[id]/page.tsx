@@ -18,6 +18,7 @@ export default async function DocumentPage({ params }: { params: Promise<{ id: s
       id={doc.id}
       initialTitle={doc.title}
       initialContent={doc.content}
+      initialVersion={doc.version}
       access={doc.access}
       owner={doc.owner}
       initialShares={doc.shares}

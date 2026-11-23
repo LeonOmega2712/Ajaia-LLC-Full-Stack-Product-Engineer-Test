@@ -15,7 +15,7 @@ export const PATCH = withErrors<Ctx>(async (req, { params }) => {
   const user = await requireUser();
   const input = parseOrThrow(updateDocumentSchema, await readJson(req));
   const doc = await documentService.update(user.id, (await params).id, input);
-  return NextResponse.json({ id: doc.id, title: doc.title, updatedAt: doc.updatedAt });
+  return NextResponse.json({ id: doc.id, title: doc.title, version: doc.version, updatedAt: doc.updatedAt });
 });
 
 export const DELETE = withErrors<Ctx>(async (_req, { params }) => {
