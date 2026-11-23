@@ -106,6 +106,10 @@ Running log of how this project was built, kept up to date during development. S
 - Merge order executed as planned, each only after green CI: #1 (8:24), #2 (8:29), #3 (8:30), #4 (8:31). Vercel redeployed `main` after each merge and applied the two additive migrations to Neon.
 - Production verified through the live API: save with `baseVersion` returns version 1, a stale save returns 409 naming the last editor, history lists the snapshot, presence heartbeat answers, and the temporary test document was deleted afterwards.
 
+### 8:35 PM · GitGuardian alert on the CI workflow
+- GitGuardian flagged `POSTGRES_PASSWORD: postgres` in `ci.yml` as a hardcoded secret. It was the password of the throwaway Postgres container that exists only during a CI run, so not a real credential; reported to Jonathan with a recommendation instead of acting alone.
+- **Jonathan decided to remove it.** Fix: the CI service now uses `POSTGRES_HOST_AUTH_METHOD: trust` and a connection string without a password, so no credential lives in the repo and no repository secret is needed.
+
 ## Deliberately cut
 - Real-time co-editing (CRDT). Concurrent saves are detected (409) and resolved by the user instead.
 - Comments and suggestion mode.
