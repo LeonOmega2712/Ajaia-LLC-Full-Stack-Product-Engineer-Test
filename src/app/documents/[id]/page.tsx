@@ -7,8 +7,9 @@ import { DocumentEditor } from "@/components/editor/DocumentEditor";
 export const dynamic = "force-dynamic";
 
 export default async function DocumentPage({ params }: { params: Promise<{ id: string }> }) {
-  const user = await requireUserOrRedirect();
-  const doc = await documentService.get(user.id, (await params).id).catch((e) => {
+  const { id } = await params;
+  const user = await requireUserOrRedirect(`/documents/${id}`);
+  const doc = await documentService.get(user.id, id).catch((e) => {
     if (e instanceof NotFoundError) notFound();
     throw e;
   });

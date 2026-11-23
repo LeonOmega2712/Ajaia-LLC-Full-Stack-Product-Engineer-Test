@@ -110,6 +110,42 @@ Running log of how this project was built, kept up to date during development. S
 - GitGuardian flagged `POSTGRES_PASSWORD: postgres` in `ci.yml` as a hardcoded secret. It was the password of the throwaway Postgres container that exists only during a CI run, so not a real credential; reported to Jonathan with a recommendation instead of acting alone.
 - **Jonathan decided to remove it.** Fix: the CI service now uses `POSTGRES_HOST_AUTH_METHOD: trust` and a connection string without a password, so no credential lives in the repo and no repository secret is needed.
 
+### 8:37 PM · Human intervention: manual QA on production before recording
+- **Jonathan decided to run a full manual end-to-end QA pass on production with an agent driving a real browser** (the built-in browser of his desktop app, macOS) before recording the video, and then (8:44 PM) **decided to apply every fix it found**, including the nits.
+- Checklist (all against https://ajaia-docs-one-mauve.vercel.app with alice/bob/carol):
+
+| Area | Result |
+| --- | --- |
+| Demo login; unknown/invalid email rejected with message | PASS |
+| No session: pages redirect to /login, API returns 401 | PASS |
+| Create document | PASS |
+| Rename; empty title shows error and keeps last valid; >200 chars rejected | PASS |
+| Rich text via toolbar: H1, bold, italic, underline, bullets, numbered | PASS |
+| Cmd+B shortcut on Mac | PASS (nit 3) |
+| Autosave and persistence after reload | PASS |
+| Content >1 MB rejected | PASS |
+| Import .md/.txt (UI and API), opens new doc, HTML escaped | PASS |
+| Import rejects .pdf/.docx/no extension, >1 MB, empty, with UI message | PASS |
+| Share as Editor and Viewer; invalid, unknown and owner emails rejected | PASS |
+| "My documents" / "Shared with me" with role badges | PASS |
+| Viewer: read-only editor, no toolbar/share/delete; PATCH/DELETE/share 403 | PASS |
+| Editor: can edit, cannot share or delete | PASS |
+| Someone else's or missing doc: "Document not available" 404 | PASS |
+| Delete document (owner) | PASS |
+| Export .md | PASS (nit 4) |
+| Export PDF: print dialog, chrome hidden | PASS |
+| Save conflict: banner with author and time, "Keep mine" saves | PASS (bug 1) |
+| History: list, preview, restore with prior snapshot | PASS |
+| Presence: avatars and "N others viewing" | PASS |
+
+- **Bugs found and fixed** (one PR, each with a regression test in `tests/qaRegressions.test.ts`):
+  1. **Medium:** "Keep mine" overwrote the other person's edit without a snapshot, although the banner promises it stays in history. Cause: the 5-minute snapshot throttle. **Fix:** overwriting a save made by someone else always snapshots their state first; the throttle now only applies to a user's own consecutive autosaves.
+  2. **Low:** `POST /api/documents` with malformed JSON created an "Untitled document" (201) because the body parser fell back to `{}`. **Fix:** an empty body still means `{}`, but malformed JSON is a 400 "Request body must be valid JSON."
+  3. **Nit:** tooltips said Ctrl on Mac. **Fix:** labels use ⌘ on Apple platforms, Ctrl elsewhere.
+  4. **Nit:** exported Markdown lists had whitespace-only lines between items (TipTap wraps list text in `<p>`). **Fix:** single-paragraph items are unwrapped and list markers use one space, producing tight lists (`- item a\n- item b`).
+  5. **Nit:** after being sent to login from a document, sign-in went to the dashboard. **Fix:** `/login?next=...` returns to the document; only same-origin relative paths are accepted (no open redirect).
+- Verified locally: 34 tests, build, and a browser run (malformed POST returns 400, login returns to the original document).
+
 ## Deliberately cut
 - Real-time co-editing (CRDT). Concurrent saves are detected (409) and resolved by the user instead.
 - Comments and suggestion mode.
@@ -141,6 +177,9 @@ Every decision and direction that came from Jonathan (times America/Mexico_City)
 | 8:19 PM | Asked for the **orchestrator pattern with one PR per feature**, conflicts and merges managed by the orchestrator. |
 | ~8:19 PM | Asked about parallelizing the work across agents. |
 | 8:20 PM | Asked that all his contributions be credited in this log. |
+| 8:34 PM | Asked to remove the CI database password flagged by GitGuardian, without adding a repository secret. |
+| 8:37 PM | **Decided to run manual end-to-end QA on production with a real-browser agent before recording the video.** |
+| 8:44 PM | **Decided to apply every QA fix**, nits included, and to document the QA pass as part of his decisions. |
 
 ## AI usage notes (for AI_WORKFLOW.md)
 - Used Claude Code for scaffolding, implementation, tests, docs drafts and the scripted browser check.

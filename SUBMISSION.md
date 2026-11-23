@@ -18,6 +18,7 @@ Candidate: Jonathan Eduardo Muñoz Rodríguez
 | `VIDEO_URL.txt` | Walkthrough video link |
 | `docs/WALKTHROUGH.md` | Timestamped build log, Jonathan's interventions, video script |
 | `docs/screenshots/` | Screenshots of every main flow |
+| `docs/qa/QA-prod-2026-11-22.md` | Manual end-to-end QA report on production (pass/fail + bugs, all fixed) |
 | `.github/workflows/ci.yml` | CI pipeline |
 | `src/`, `prisma/`, `tests/` | Source code, schema/migrations/seed, automated tests |
 
@@ -27,7 +28,7 @@ No password. Pick one on the sign-in screen: `alice@ajaia.test` (owner of a seed
 
 ## Status
 
-**Working end to end:** create, rename, rich-text editing, autosave, delete, .txt/.md import into a new document, sharing by email with Editor/Viewer roles and revoke, owned vs shared lists, persistence in Postgres, validation and error messages, export to Markdown and PDF, save conflict detection, version history with preview/restore, who-is-viewing indicator, CI on every push, 29 automated tests.
+**Working end to end:** create, rename, rich-text editing, autosave, delete, .txt/.md import into a new document, sharing by email with Editor/Viewer roles and revoke, owned vs shared lists, persistence in Postgres, validation and error messages, export to Markdown and PDF, save conflict detection, version history with preview/restore, who-is-viewing indicator, CI on every push, 34 automated tests.
 
 **Not included (deliberate):** real-time co-editing (concurrent saves are detected and resolved by the user instead), comments/suggestions, real authentication, .docx import.
 

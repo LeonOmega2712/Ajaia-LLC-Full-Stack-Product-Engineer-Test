@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { AppError } from "@/lib/errors";
+import { AppError, ValidationError } from "@/lib/errors";
 
 type Handler<C> = (req: Request, ctx: C) => Promise<Response>;
 
@@ -18,10 +18,13 @@ export function withErrors<C>(handler: Handler<C>): Handler<C> {
   };
 }
 
+/** Parses a JSON body. An empty body counts as `{}`; malformed JSON is a 400, never silently ignored. */
 export async function readJson(req: Request): Promise<unknown> {
+  const text = await req.text();
+  if (!text.trim()) return {};
   try {
-    return await req.json();
+    return JSON.parse(text);
   } catch {
-    return {};
+    throw new ValidationError("Request body must be valid JSON.");
   }
 }
