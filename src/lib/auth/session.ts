@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { UnauthorizedError } from "@/lib/errors";
 import type { UserSummary } from "@/lib/documents/types";
+import { loginUrl } from "./nextPath";
 import { signUserId, verifyToken } from "./token";
 
 const COOKIE = "ajaia_session";
@@ -27,10 +28,10 @@ export async function requireUser(): Promise<UserSummary> {
   return user;
 }
 
-/** For pages: redirects to the login screen when there is no session. */
-export async function requireUserOrRedirect(): Promise<UserSummary> {
+/** For pages: redirects to the login screen when there is no session, remembering where to return. */
+export async function requireUserOrRedirect(returnTo = "/"): Promise<UserSummary> {
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  if (!user) redirect(loginUrl(returnTo));
   return user;
 }
 

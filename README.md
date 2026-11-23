@@ -63,7 +63,7 @@ npm run dev                 # http://localhost:3000
 npm test
 ```
 
-Covers the access policy (owner / editor / viewer / no access), the document service sharing flow (owned vs shared lists, view-only enforcement, revoking access, 404 instead of 403 for non-shared docs, invalid share targets) the file import conversion (escaping, markdown, validation) the Markdown export (every toolbar format, round-trip through the importer, safe file names), save conflicts and version history (injected clock: 409 on stale saves, snapshot throttling, restore and undo, access rules) and presence (active window, stale viewers, no-access 404). The service tests run against an in-memory repository, so no database is needed.
+Covers the access policy (owner / editor / viewer / no access), the document service sharing flow (owned vs shared lists, view-only enforcement, revoking access, 404 instead of 403 for non-shared docs, invalid share targets) the file import conversion (escaping, markdown, validation) the Markdown export (every toolbar format, round-trip through the importer, safe file names), save conflicts and version history (injected clock: 409 on stale saves, snapshot throttling, restore and undo, access rules) presence (active window, stale viewers, no-access 404), and regression tests for every bug found in the manual QA pass on production (`docs/qa/`). The service tests run against an in-memory repository, so no database is needed.
 
 ## Deploy (Vercel + Neon)
 

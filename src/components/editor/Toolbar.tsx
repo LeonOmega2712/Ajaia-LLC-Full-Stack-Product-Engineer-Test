@@ -1,6 +1,8 @@
 "use client";
 
 import { type Editor, useEditorState } from "@tiptap/react";
+import { useMemo } from "react";
+import { isMacPlatform, modifierLabel } from "@/lib/shortcuts";
 
 interface ToolbarButton {
   label: string;
@@ -24,9 +26,9 @@ const BUTTON_GROUPS: ToolbarButton[][] = [
     })),
   ],
   [
-    { label: "B", title: "Bold (Ctrl+B)", className: "font-bold", isActive: (e) => e.isActive("bold"), run: (e) => chain(e).toggleBold().run() },
-    { label: "I", title: "Italic (Ctrl+I)", className: "italic", isActive: (e) => e.isActive("italic"), run: (e) => chain(e).toggleItalic().run() },
-    { label: "U", title: "Underline (Ctrl+U)", className: "underline", isActive: (e) => e.isActive("underline"), run: (e) => chain(e).toggleUnderline().run() },
+    { label: "B", title: "Bold (Mod+B)", className: "font-bold", isActive: (e) => e.isActive("bold"), run: (e) => chain(e).toggleBold().run() },
+    { label: "I", title: "Italic (Mod+I)", className: "italic", isActive: (e) => e.isActive("italic"), run: (e) => chain(e).toggleItalic().run() },
+    { label: "U", title: "Underline (Mod+U)", className: "underline", isActive: (e) => e.isActive("underline"), run: (e) => chain(e).toggleUnderline().run() },
     { label: "S", title: "Strikethrough", className: "line-through", isActive: (e) => e.isActive("strike"), run: (e) => chain(e).toggleStrike().run() },
   ],
   [
@@ -35,8 +37,8 @@ const BUTTON_GROUPS: ToolbarButton[][] = [
     { label: "❝", title: "Quote", isActive: (e) => e.isActive("blockquote"), run: (e) => chain(e).toggleBlockquote().run() },
   ],
   [
-    { label: "↶", title: "Undo (Ctrl+Z)", isActive: () => false, run: (e) => chain(e).undo().run() },
-    { label: "↷", title: "Redo (Ctrl+Shift+Z)", isActive: () => false, run: (e) => chain(e).redo().run() },
+    { label: "↶", title: "Undo (Mod+Z)", isActive: () => false, run: (e) => chain(e).undo().run() },
+    { label: "↷", title: "Redo (Mod+Shift+Z)", isActive: () => false, run: (e) => chain(e).redo().run() },
   ],
 ];
 
@@ -44,6 +46,8 @@ const ALL_BUTTONS = BUTTON_GROUPS.flat();
 
 export function Toolbar({ editor }: { editor: Editor }) {
   // Re-render only when the active-state vector changes.
+  // Rendered only after the editor mounts on the client, so reading the platform here is hydration-safe.
+  const mod = useMemo(() => modifierLabel(isMacPlatform()), []);
   const active = useEditorState({ editor, selector: ({ editor: e }) => ALL_BUTTONS.map((b) => b.isActive(e)) });
 
   let index = 0;
@@ -57,7 +61,7 @@ export function Toolbar({ editor }: { editor: Editor }) {
               <button
                 key={b.title}
                 type="button"
-                title={b.title}
+                title={b.title.replace("Mod", mod)}
                 aria-pressed={isActive}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => b.run(editor)}

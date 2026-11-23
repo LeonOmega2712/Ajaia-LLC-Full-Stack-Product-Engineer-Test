@@ -65,7 +65,10 @@ export class DocumentService {
     const doc = await this.requireEditor(userId, id);
     if (doc.version !== input.baseVersion) throw this.conflict(doc);
     const { baseVersion, ...changes } = input;
-    await this.snapshotIfDue(doc, userId);
+    // Overwriting another person's save always keeps their state in history (e.g. "Keep mine" after a conflict);
+    // the 5-minute throttle only applies to a user's own consecutive autosaves.
+    const overwritesSomeoneElse = doc.updatedBy !== null && doc.updatedBy.id !== userId;
+    await (overwritesSomeoneElse && doc.content ? this.snapshot(doc, userId) : this.snapshotIfDue(doc, userId));
     const updated = await this.docs.update(id, changes, { editorId: userId, expectedVersion: baseVersion });
     // Null means another save won the race between our read and our write.
     if (!updated) throw this.conflict(await this.get(userId, id));

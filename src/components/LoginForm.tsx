@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/lib/apiClient";
 
-export function LoginForm({ users }: { users: { email: string; name: string }[] }) {
+export function LoginForm({ users, next }: { users: { email: string; name: string }[]; next: string }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<string | null>(null);
@@ -14,7 +14,7 @@ export function LoginForm({ users }: { users: { email: string; name: string }[] 
     setError(null);
     try {
       await api("/api/auth/login", { method: "POST", body: JSON.stringify({ email }) });
-      router.push("/");
+      router.push(next);
       router.refresh();
     } catch (e) {
       setError((e as Error).message);
