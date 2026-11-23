@@ -13,6 +13,7 @@ import { useAutosave } from "@/lib/useAutosave";
 import { AccessBadge } from "../AccessBadge";
 import { ConflictBanner, type ConflictInfo } from "./ConflictBanner";
 import { ExportMenu } from "./ExportMenu";
+import { PresenceIndicator } from "./PresenceIndicator";
 import { SaveIndicator } from "./SaveIndicator";
 import { SharePanel } from "./SharePanel";
 import { Toolbar } from "./Toolbar";
@@ -118,6 +119,7 @@ export function DocumentEditor({ id, initialTitle, initialContent, initialVersio
             ← Documents
           </Link>
           <AccessBadge access={access} />
+          <PresenceIndicator documentId={id} />
           <div className="ml-auto flex items-center gap-3">
             <ExportMenu editor={editor} title={title} />
             <SaveIndicator statuses={[autosave]} readOnly={!editable} conflict={conflict !== null} />

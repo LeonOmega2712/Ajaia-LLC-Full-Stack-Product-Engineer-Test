@@ -10,31 +10,33 @@ datasource db {
 }
 
 model User {
-  id        String            @id @default(cuid())
-  email     String            @unique
+  id        String             @id @default(cuid())
+  email     String             @unique
   name      String
-  createdAt DateTime          @default(now())
+  createdAt DateTime           @default(now())
   documents Document[]
   shares    DocumentShare[]
-  edits     Document[]        @relation("LastEditor")
+  edits     Document[]         @relation("LastEditor")
   versions  DocumentVersion[]
+  presence  DocumentPresence[]
 }
 
 model Document {
-  id          String            @id @default(cuid())
+  id          String             @id @default(cuid())
   title       String
   /// Rich text stored as TipTap-generated HTML (schema-constrained by the editor).
-  content     String            @default("")
+  content     String             @default("")
   ownerId     String
-  owner       User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner       User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   shares      DocumentShare[]
   /// Optimistic-concurrency counter: incremented on every save.
-  version     Int               @default(0)
+  version     Int                @default(0)
   updatedById String?
-  updatedBy   User?             @relation("LastEditor", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedBy   User?              @relation("LastEditor", fields: [updatedById], references: [id], onDelete: SetNull)
   versions    DocumentVersion[]
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  presence    DocumentPresence[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
 
   @@index([ownerId])
 }
@@ -69,4 +71,16 @@ model DocumentVersion {
   createdBy   User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
 
   @@index([documentId, createdAt])
+}
+
+/// Last heartbeat of a user viewing a document; "active" means seen within a short window.
+model DocumentPresence {
+  documentId String
+  userId     String
+  lastSeenAt DateTime @default(now())
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([documentId, userId])
+  @@index([documentId, lastSeenAt])
 }
