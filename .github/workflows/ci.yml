@@ -12,14 +12,15 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_PASSWORD: postgres
+          # Ephemeral CI-only database: passwordless local auth, so no credential lives in the repo.
+          POSTGRES_HOST_AUTH_METHOD: trust
           POSTGRES_DB: ajaia
         ports: ["5432:5432"]
         options: >-
           --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ajaia
-      DATABASE_URL_UNPOOLED: postgresql://postgres:postgres@localhost:5432/ajaia
+      DATABASE_URL: postgresql://postgres@localhost:5432/ajaia
+      DATABASE_URL_UNPOOLED: postgresql://postgres@localhost:5432/ajaia
       AUTH_SECRET: ci-secret
     steps:
       - uses: actions/checkout@v4
