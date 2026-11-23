@@ -28,7 +28,7 @@ No password. Pick one on the sign-in screen: `alice@ajaia.test` (owner of a seed
 
 ## Status
 
-**Working end to end:** create, rename, rich-text editing, autosave, delete, .txt/.md import into a new document, sharing by email with Editor/Viewer roles and revoke, owned vs shared lists, persistence in Postgres, validation and error messages, export to Markdown and PDF, save conflict detection, version history with preview/restore, who-is-viewing indicator, CI on every push, 34 automated tests.
+**Working end to end:** create, rename, rich-text editing, autosave, delete, .txt/.md import into a new document, sharing by email with Editor/Viewer roles and revoke, owned vs shared lists, persistence in Postgres, validation and error messages, export to Markdown and PDF, save conflict detection, version history with preview/restore, who-is-viewing indicator, CI on every push, 39 automated tests.
 
 **Not included (deliberate):** real-time co-editing (concurrent saves are detected and resolved by the user instead), comments/suggestions, real authentication, .docx import.
 

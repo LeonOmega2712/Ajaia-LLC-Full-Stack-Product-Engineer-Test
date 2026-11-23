@@ -76,3 +76,12 @@ export interface VersionRepository {
 export interface UserRepository {
   findByEmail(email: string): Promise<UserSummary | null>;
 }
+
+/** Repositories whose writes must commit together (a document save and its history snapshot). */
+export interface WriteRepositories {
+  docs: DocumentRepository;
+  versions: VersionRepository;
+}
+
+/** Runs `work` atomically: every write inside it commits, or none does (the work throwing rolls back). */
+export type UnitOfWork = <T>(work: (repos: WriteRepositories) => Promise<T>) => Promise<T>;

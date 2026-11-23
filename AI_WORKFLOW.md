@@ -14,6 +14,7 @@
 - Running a headless browser smoke test of the full flow (create, format, autosave, share, view-only enforcement, import) and checking screenshots.
 
 - Orchestrating parallel work: one AI session acted as orchestrator while a sub-agent built the presence feature in its own git worktree. The orchestrator opened one PR per feature, resolved the merge conflict in `schema.prisma`, waited for green CI and merged in a planned order.
+- **Second AI as independent auditor.** After the build I had a separate AI (my local Claude, with no access to the build session) audit the code for SOLID and good practices. I then prioritized its findings by value versus risk: the transaction around save + snapshot, the error body shape, delete feedback and a generic share message went in; pure refactors (extracting a sync hook, sharing limits with the UI) were deferred so nothing risky landed right before recording.
 
 ## What I changed or rejected
 

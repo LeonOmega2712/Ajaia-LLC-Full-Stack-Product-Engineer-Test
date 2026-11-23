@@ -8,6 +8,7 @@ import type {
   VersionRecord,
   VersionRepository,
   VersionSummary,
+  UnitOfWork,
 } from "./types";
 
 export const DEFAULT_TITLE = "Untitled document";
@@ -26,6 +27,9 @@ export interface DocumentView extends DocumentRecord {
   access: ReturnType<typeof accessLevel>;
 }
 
+/** Thrown inside a unit of work when the conditional write loses a race, so the snapshot rolls back too. */
+class StaleWrite extends Error {}
+
 /**
  * Application use cases for documents. Every method receives the acting user id
  * and enforces the access policy before touching persistence.
@@ -36,6 +40,8 @@ export class DocumentService {
     private readonly users: UserRepository,
     private readonly versions: VersionRepository,
     private readonly now: () => Date = () => new Date(),
+    /** Defaults to running without a transaction (fine for in-memory tests); production injects Prisma's. */
+    private readonly inTransaction: UnitOfWork = (work) => work({ docs, versions }),
   ) {}
 
   async list(userId: string): Promise<{ owned: DocumentListItem[]; shared: DocumentListItem[] }> {
@@ -68,11 +74,20 @@ export class DocumentService {
     // Overwriting another person's save always keeps their state in history (e.g. "Keep mine" after a conflict);
     // the 5-minute throttle only applies to a user's own consecutive autosaves.
     const overwritesSomeoneElse = doc.updatedBy !== null && doc.updatedBy.id !== userId;
-    await (overwritesSomeoneElse && doc.content ? this.snapshot(doc, userId) : this.snapshotIfDue(doc, userId));
-    const updated = await this.docs.update(id, changes, { editorId: userId, expectedVersion: baseVersion });
-    // Null means another save won the race between our read and our write.
-    if (!updated) throw this.conflict(await this.get(userId, id));
-    return { ...updated, access: doc.access };
+    try {
+      // Snapshot and conditional write commit together: a lost race leaves no orphan history entry.
+      const updated = await this.inTransaction(async ({ docs, versions }) => {
+        await (overwritesSomeoneElse && doc.content ? this.snapshot(versions, doc, userId) : this.snapshotIfDue(versions, doc, userId));
+        const result = await docs.update(id, changes, { editorId: userId, expectedVersion: baseVersion });
+        // Null means another save won the race between our read and our write.
+        if (!result) throw new StaleWrite();
+        return result;
+      });
+      return { ...updated, access: doc.access };
+    } catch (err) {
+      if (err instanceof StaleWrite) throw this.conflict(await this.get(userId, id));
+      throw err;
+    }
   }
 
   async listVersions(userId: string, id: string): Promise<VersionSummary[]> {
@@ -91,8 +106,12 @@ export class DocumentService {
   async restoreVersion(userId: string, id: string, versionId: string): Promise<DocumentView> {
     const doc = await this.requireEditor(userId, id);
     const version = await this.getVersion(userId, id, versionId);
-    await this.snapshot(doc, userId);
-    const updated = await this.docs.update(id, { title: version.title, content: version.content }, { editorId: userId });
+    // Restore is an explicit user action, so it overwrites whatever is current (no expectedVersion);
+    // the current state is snapshotted in the same transaction, so nothing is lost.
+    const updated = await this.inTransaction(async ({ docs, versions }) => {
+      await this.snapshot(versions, doc, userId);
+      return docs.update(id, { title: version.title, content: version.content }, { editorId: userId });
+    });
     if (!updated) throw new NotFoundError("Document not found.");
     return { ...updated, access: doc.access };
   }
@@ -105,7 +124,7 @@ export class DocumentService {
   async share(userId: string, id: string, email: string, role: ShareRole): Promise<DocumentView> {
     const doc = await this.requireOwner(userId, id);
     const target = await this.users.findByEmail(email);
-    if (!target) throw new ValidationError(`No user with email ${email}. Try one of the demo accounts.`);
+    if (!target) throw new ValidationError("Could not share with that email. Check the address and try again.");
     if (target.id === doc.ownerId) throw new ValidationError("You already own this document.");
     await this.docs.upsertShare(id, target.id, role);
     return this.get(userId, id);
@@ -131,15 +150,15 @@ export class DocumentService {
   }
 
   /** Keeps the pre-edit state, throttled so autosave does not flood the history. */
-  private async snapshotIfDue(doc: DocumentRecord, userId: string): Promise<void> {
+  private async snapshotIfDue(versions: VersionRepository, doc: DocumentRecord, userId: string): Promise<void> {
     if (!doc.content) return; // an empty body is not worth a history entry
-    const latest = await this.versions.latest(doc.id);
+    const latest = await versions.latest(doc.id);
     if (latest && this.now().getTime() - latest.createdAt.getTime() < SNAPSHOT_INTERVAL_MS) return;
-    await this.snapshot(doc, userId);
+    await this.snapshot(versions, doc, userId);
   }
 
-  private snapshot(doc: DocumentRecord, userId: string): Promise<void> {
-    return this.versions.create({ documentId: doc.id, title: doc.title, content: doc.content, createdById: userId });
+  private snapshot(versions: VersionRepository, doc: DocumentRecord, userId: string): Promise<void> {
+    return versions.create({ documentId: doc.id, title: doc.title, content: doc.content, createdById: userId });
   }
 
   private async requireOwner(userId: string, id: string): Promise<DocumentView> {

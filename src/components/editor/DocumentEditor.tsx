@@ -41,6 +41,7 @@ export function DocumentEditor({ id, initialTitle, initialContent, initialVersio
   // Version the local copy is based on; sent with every save so the server can detect conflicts.
   const versionRef = useRef(initialVersion);
   const [conflict, setConflict] = useState<ConflictInfo | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const save = useCallback(
     async (patch: Patch) => {
@@ -51,7 +52,10 @@ export function DocumentEditor({ id, initialTitle, initialContent, initialVersio
         });
         versionRef.current = res.version;
       } catch (e) {
-        if (e instanceof ApiError && e.status === 409) setConflict({ message: e.message, ...(e.data.current as Omit<ConflictInfo, "message">) });
+        if (e instanceof ApiError && e.status === 409) {
+          const details = e.data.details as { current?: Omit<ConflictInfo, "message"> } | undefined;
+          if (details?.current) setConflict({ message: e.message, ...details.current });
+        }
         throw e;
       }
     },
@@ -104,7 +108,13 @@ export function DocumentEditor({ id, initialTitle, initialContent, initialVersio
 
   async function onDelete() {
     if (!window.confirm("Delete this document permanently?")) return;
-    await api(`/api/documents/${id}`, { method: "DELETE" });
+    setDeleteError(null);
+    try {
+      await api(`/api/documents/${id}`, { method: "DELETE" });
+    } catch (e) {
+      setDeleteError(e instanceof Error ? e.message : "Could not delete the document.");
+      return;
+    }
     router.push("/");
     router.refresh();
   }
@@ -156,6 +166,7 @@ export function DocumentEditor({ id, initialTitle, initialContent, initialVersio
             Delete document
           </button>
         )}
+        {deleteError && <p className="text-sm text-red-600">{deleteError}</p>}
       </aside>
     </div>
   );

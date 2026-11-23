@@ -2,6 +2,7 @@ import type { ShareRole } from "@/lib/access/policy";
 import type {
   DocumentRecord,
   DocumentRepository,
+  UnitOfWork,
   UserRepository,
   UserSummary,
   VersionRecord,
@@ -76,5 +77,19 @@ export function createInMemoryRepos(users: UserSummary[], now: () => Date = () =
   };
 
   const userRepo: UserRepository = { findByEmail: async (email) => users.find((u) => u.email === email) ?? null };
-  return { docRepo, userRepo, versionRepo };
+  /** Rolls every store back if the work throws, mirroring a database transaction. */
+  const unitOfWork: UnitOfWork = async (work) => {
+    const saved = { docs: new Map(docs), shares: shares.map((x) => ({ ...x })), versions: [...versions] };
+    try {
+      return await work({ docs: docRepo, versions: versionRepo });
+    } catch (err) {
+      docs.clear();
+      saved.docs.forEach((v, k) => docs.set(k, v));
+      shares.splice(0, shares.length, ...saved.shares);
+      versions.splice(0, versions.length, ...saved.versions);
+      throw err;
+    }
+  };
+
+  return { docRepo, userRepo, versionRepo, unitOfWork };
 }

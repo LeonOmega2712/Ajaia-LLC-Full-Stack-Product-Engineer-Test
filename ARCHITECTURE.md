@@ -32,7 +32,8 @@ access/policy.ts   DocumentRepository (port)
 
 - **Single responsibility:** routes only parse input and map errors; the service holds business rules; the repository only persists.
 - **Dependency inversion:** `DocumentService` depends on repository interfaces. `src/lib/documents/index.ts` is the only place it is wired to Prisma; tests wire it to an in-memory implementation.
-- **Consistent errors:** domain errors (`ValidationError`, `ForbiddenError`, `NotFoundError`, ...) carry their HTTP status and one wrapper (`withErrors`) turns them into JSON responses.
+- **Atomic writes:** a `UnitOfWork` port runs the history snapshot and the conditional save in one database transaction, so a save that loses a race leaves nothing behind. Repositories are built from a Prisma client (`createPrismaRepositories(client)`), the same code inside or outside a transaction.
+- **Consistent errors:** domain errors (`ValidationError`, `ForbiddenError`, `NotFoundError`, ...) carry their HTTP status and one wrapper (`withErrors`) turns them into JSON responses shaped `{ error, details? }`.
 
 ## Key decisions and tradeoffs
 
@@ -40,7 +41,6 @@ access/policy.ts   DocumentRepository (port)
 - **Roles: Owner, Editor, Viewer.** Owners delete and manage sharing; editors edit content and title; viewers read only. This went slightly beyond the minimum because it was cheap once the policy module existed and makes the sharing demo more meaningful.
 - **Non-shared documents return 404, not 403,** so document ids cannot be probed.
 - **Mocked auth with a signed cookie.** No passwords; the cookie holds the user id with an HMAC so it cannot be trivially edited to impersonate another user. Not production auth (no expiry rotation, no CSRF token beyond SameSite=Lax).
-- **Last write wins.** Two editors on the same document at the same time will overwrite each other's saves. Real-time collaboration (Yjs/CRDT) was deliberately cut; it is the biggest jump in complexity.
 - **Upload scope: .txt and .md into a new document.** Both convert cleanly to the editor's formats. Raw HTML in markdown is escaped. `.docx` was cut because it needs a heavier converter for marginal demo value.
 - **Export (stretch):** Markdown is generated client-side from the live editor with `turndown` (underline has no Markdown syntax, so it is kept as inline `<u>`). PDF uses `window.print()` plus a print stylesheet instead of a PDF library: zero extra dependencies, selectable text, and the browser handles pagination. The cost is one extra click in the print dialog ("Save as PDF").
 - **Optimistic concurrency instead of real-time co-editing.** `Document.version` is incremented on every save and each `PATCH` must send `baseVersion`; the write is a single compare-and-set (`UPDATE ... WHERE version = ?`). A stale save returns 409 with who/when, and the UI asks the user to keep theirs or load the other version. This removes silent last-write-wins at a fraction of the cost of CRDTs (Yjs).
@@ -62,6 +62,7 @@ access/policy.ts   DocumentRepository (port)
 2. Visual diff between a version and the current document.
 3. `.docx` import via `mammoth`.
 4. Real-time co-editing with Yjs if collaboration becomes the core use case.
+5. Refactors deferred from the SOLID audit: extract a `useDocumentSync` hook from `DocumentEditor` (version, conflict, restore); expose access checks by level and the title/content limits from a shared module so the UI stops duplicating them; set `useAutosave`'s callback ref in an effect; structured logging with a request id; move the direct Prisma calls in the login page and route behind `UserRepository`; map domain errors to HTTP status in the handler instead of inside the errors.
 
 ## Delivery process
 
