@@ -58,6 +58,14 @@ Running log of how this project was built, kept up to date during development. S
 - Pushed to branch `claude/project-thread-u2bufc`.
 - **Decision:** skipped the Neon CLI setup (needs browser login, adds a tool) and configure connection strings directly in Vercel.
 
+### 8:10 PM · Deploy
+- Production on Vercel + Neon: https://ajaia-docs-one-mauve.vercel.app
+- `main` created from the feature branch; Vercel auto-deploys from `main`.
+- Env vars set directly in Vercel (no Neon CLI): `DATABASE_URL` (pooled), `DATABASE_URL_UNPOOLED` (direct), `AUTH_SECRET`.
+- `vercel-build` applied migrations and the seed on the first build.
+- Turned off Vercel Authentication (deployment protection) so reviewers can open the URL without a Vercel account.
+- Verified end to end on production: Alice creates and shares a document, Carol sees it under "Shared with me".
+
 ## Deliberately cut
 - Real-time co-editing and presence (biggest jump in complexity). Concurrent saves are last-write-wins.
 - Comments, version history, export.

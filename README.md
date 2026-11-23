@@ -2,7 +2,7 @@
 
 A lightweight collaborative document editor inspired by Google Docs, built for the Ajaia LLC Full Stack Product Engineer assignment.
 
-**Live demo:** _TBD (Vercel URL)_
+**Live demo:** https://ajaia-docs-one-mauve.vercel.app
 
 ## Features
 

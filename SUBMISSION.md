@@ -4,7 +4,7 @@ Candidate: Jonathan Eduardo Muñoz Rodríguez
 
 ## Links
 
-- **Live app:** _TBD_
+- **Live app:** https://ajaia-docs-one-mauve.vercel.app
 - **Source code:** this folder (also on GitHub: https://github.com/LeonOmega2712/Ajaia-LLC-Full-Stack-Product-Engineer-Test)
 - **Walkthrough video:** see `VIDEO_URL.txt`
 
