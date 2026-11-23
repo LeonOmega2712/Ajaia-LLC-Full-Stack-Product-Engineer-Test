@@ -1,30 +1,32 @@
 # AI workflow note
 
-> Draft: to be reviewed and edited by Jonathan before submission.
-
 ## Tools used
 
-- **Claude Code** (agentic coding assistant) for scaffolding, implementation, tests, and first drafts of documentation.
+- **Claude Code** in a project setup: one coordinator session plus a thread per piece of work (build and PR orchestration, deploy, real-browser QA on production, submission packaging). One sub-agent built a feature in parallel in its own git worktree.
+- **Connectors** I added myself: GitHub, Vercel, Neon and Google Drive. They let the AI create the repo changes, the Vercel project, the env vars and the database without me copying credentials by hand.
+- **My local Claude** (no access to the build session) as an independent SOLID and good-practices auditor.
+
+The stack (Next.js, TipTap, Prisma, Postgres) was proposed by the AI from the brief; I accepted it and chose the deploy target (Vercel + Neon).
 
 ## Where AI materially sped things up
 
-- Scaffolding the Next.js + Prisma + TipTap project and the boilerplate around it (route handlers, Prisma schema, seed script).
-- Writing the in-memory repository and test cases for the access-control rules.
-- Drafting README and architecture notes from the actual code.
-- Running a headless browser smoke test of the full flow (create, format, autosave, share, view-only enforcement, import) and checking screenshots.
-
-- Orchestrating parallel work: one AI session acted as orchestrator while a sub-agent built the presence feature in its own git worktree. The orchestrator opened one PR per feature, resolved the merge conflict in `schema.prisma`, waited for green CI and merged in a planned order.
-- **Second AI as independent auditor.** After the build I had a separate AI (my local Claude, with no access to the build session) audit the code for SOLID and good practices. I then prioritized its findings by value versus risk: the transaction around save + snapshot, the error body shape, delete feedback and a generic share message went in; pure refactors (extracting a sync hook, sharing limits with the UI) were deferred so nothing risky landed right before recording.
+- Scaffolding and the core loop (editor, autosave, import, sharing, access rules, tests) in minutes instead of hours.
+- Deploy end to end through the connectors: Vercel project, Neon database, env vars and migrations, with no secrets pasted into chat or the repo.
+- Parallel delivery: an orchestrator session opened one PR per feature, resolved the `schema.prisma` merge conflict, waited for green CI and merged in a planned order ([PR history](https://github.com/LeonOmega2712/Ajaia-LLC-Full-Stack-Product-Engineer-Test/pulls?q=is%3Apr)).
+- Manual QA on production driven by an agent in a real browser, with a pass/fail report (`docs/qa/QA-prod-2026-11-22.md`).
+- Docs and a timestamped build log (`docs/WALKTHROUGH.md`) kept up to date as the work happened.
 
 ## What I changed or rejected
 
-- _[Edit with your own examples.]_ Example: the first version of the editor card used `overflow-hidden` together with a sticky toolbar, which pushed the toolbar down over the text. Caught from a screenshot during the smoke test and fixed.
-- Kept the scope cuts explicit (no real-time collaboration, no .docx) rather than accepting broader generated features.
-- Decided that editors may rename documents but only owners may share or delete.
+- **Process:** I asked for one PR per feature with CI gating every merge, and approved CI as the first PR because it proves everything after it. I accepted the orchestrator's proposal to ship conflict detection and version history in one PR, since both rewrite the same save path and share one migration.
+- **Stretch scope:** I picked extras by low cost versus demonstrable value (export, conflicts + history, presence) and kept real-time co-editing, comments and `.docx` out.
+- **Security:** GitGuardian flagged the throwaway Postgres password in the CI workflow. The AI said it was not a real credential; I still chose to remove it (CI now uses trust auth) instead of adding a repository secret.
+- **Audit triage:** from my local Claude's audit I applied the transaction around snapshot + write, the `{ error, details }` error shape, delete feedback and a generic message when sharing with an unknown email. I deferred the pure refactors (extracting the editor sync hook, sharing limits with the UI) because they added risk right before delivery.
+- **Corrections to AI output:** the first draft let only owners rename (changed so editors can rename too); a sticky toolbar inside an `overflow-hidden` card covered the text; the snapshot rule produced empty history entries; a generated submission draft said the seed shared the demo doc with Carol, but it only shares it with Bob. All caught in review or verification and fixed.
 
 ## How correctness was verified
 
-- Access rules are isolated in a pure module and covered by unit tests; the service is tested against an in-memory repository for the full sharing flow.
-- Type checking (`tsc`), ESLint and a production build on every iteration.
-- Manual and scripted browser checks: formatting survives reload, a viewer gets a read-only editor and a 403 from the API, a non-shared user gets a 404.
-- _[Add your own manual review notes here.]_
+- CI (lint, typecheck, tests, build) on every PR; 39 automated tests covering access rules, the document service, versioning and save conflicts. Tests run against an in-memory repository, so they need no database.
+- Concurrency checked against Postgres: 5 parallel saves on the same base version give 1 × 200, 4 × 409 and exactly one history snapshot.
+- Manual QA on production found a data-loss bug the tests did not cover: "Keep mine" overwrote the other user's edit without saving it to history. Fixed with a regression test.
+- I reviewed the code myself file by file using `docs/CODE_MAP.md`, which I asked for as part of that review.

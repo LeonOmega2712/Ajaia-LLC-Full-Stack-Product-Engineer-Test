@@ -6,7 +6,8 @@ Candidate: Jonathan Eduardo Muñoz Rodríguez
 
 - **Live app:** https://ajaia-docs-one-mauve.vercel.app
 - **Source code:** this folder (also on GitHub: https://github.com/LeonOmega2712/Ajaia-LLC-Full-Stack-Product-Engineer-Test)
-- **Walkthrough video:** see `VIDEO_URL.txt`
+- **Walkthrough video:** https://youtu.be/Gjpw6UUDMgE (also in `VIDEO_URL.txt`)
+- **Google Drive folder:** https://drive.google.com/drive/folders/1sxM3pjRMRnNX_aE-XzLRNhT-Eu-VSspD
 
 ## Included
 
@@ -21,6 +22,7 @@ Candidate: Jonathan Eduardo Muñoz Rodríguez
 | `docs/screenshots/` | Screenshots of every main flow |
 | `docs/qa/QA-prod-2026-11-22.md` | Manual end-to-end QA report on production (pass/fail + bugs, all fixed) |
 | `.github/workflows/ci.yml` | CI pipeline |
+| `source-code.zip` (Drive) / repo root | Full source code from `main` |
 | `src/`, `prisma/`, `tests/` | Source code, schema/migrations/seed, automated tests |
 
 ## Test accounts
