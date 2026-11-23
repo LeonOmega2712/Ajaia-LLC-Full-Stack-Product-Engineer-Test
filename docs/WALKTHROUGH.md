@@ -119,12 +119,12 @@ Every decision and direction that came from Jonathan (times America/Mexico_City)
 | Time | Intervention |
 | --- | --- |
 | 7:47 PM | Provided the assignment and the 230-minute deadline; left stack choice open to the technical details in the brief. |
-| 7:49 PM | Asked whether the agent could use GitHub directly; then created the repository himself and connected it to the project (7:51 PM). |
+| 7:49 PM | **His idea to let the AI operate his GitHub directly** (asked about `gh` CLI access) so repository changes could be made and controlled from the session; then created the repository himself and connected it to the project (7:51 PM). |
 | 7:52 PM | Asked what he could do in parallel that the AI could not (accounts, Drive folder, video tooling). |
 | 7:53 PM | Chose **Vercel + Neon Postgres** for deployment. |
 | 8:00 PM | Created the Neon account (Vercel account already existed). |
 | 8:01 PM | Asked for this running walkthrough log of the work. |
-| 8:04 PM | Connected Vercel, Neon and Google Drive as connectors to manage deployment and delivery. |
+| 8:04 PM | **His idea to use the GitHub, Vercel and Neon connectors** for a fast deployment and controlled changes to the repository: he added the Vercel, Neon and Google Drive connectors himself, which let the deploy (project creation, env vars, database) be done end to end without copying credentials by hand. |
 | 8:05 PM | Approved creating `main` as production and using his Neon project. |
 | 8:05 PM | Asked what parts of the assignment were still missing. |
 | 8:06 PM | Approved the Vercel access request for the deployment. |
