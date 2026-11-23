@@ -16,6 +16,7 @@ model User {
   createdAt DateTime        @default(now())
   documents Document[]
   shares    DocumentShare[]
+  presence  DocumentPresence[]
 }
 
 model Document {
@@ -26,6 +27,7 @@ model Document {
   ownerId   String
   owner     User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   shares    DocumentShare[]
+  presence  DocumentPresence[]
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
 
@@ -48,4 +50,16 @@ model DocumentShare {
 
   @@unique([documentId, userId])
   @@index([userId])
+}
+
+/// Last heartbeat of a user viewing a document; "active" means seen within a short window.
+model DocumentPresence {
+  documentId String
+  userId     String
+  lastSeenAt DateTime @default(now())
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([documentId, userId])
+  @@index([documentId, lastSeenAt])
 }

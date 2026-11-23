@@ -12,6 +12,7 @@ import type { ShareRecord, UserSummary } from "@/lib/documents/types";
 import { useAutosave } from "@/lib/useAutosave";
 import { AccessBadge } from "../AccessBadge";
 import { ExportMenu } from "./ExportMenu";
+import { PresenceIndicator } from "./PresenceIndicator";
 import { SaveIndicator } from "./SaveIndicator";
 import { SharePanel } from "./SharePanel";
 import { Toolbar } from "./Toolbar";
@@ -72,6 +73,7 @@ export function DocumentEditor({ id, initialTitle, initialContent, access, owner
             ← Documents
           </Link>
           <AccessBadge access={access} />
+          <PresenceIndicator documentId={id} />
           <div className="ml-auto flex items-center gap-3">
             <ExportMenu editor={editor} title={title} />
             <SaveIndicator statuses={[titleSave, contentSave]} readOnly={!editable} />
