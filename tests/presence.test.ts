@@ -37,8 +37,8 @@ describe("PresenceService", () => {
   };
 
   beforeEach(async () => {
-    const { docRepo, userRepo } = createInMemoryRepos(users);
-    const documents = new DocumentService(docRepo, userRepo);
+    const { docRepo, userRepo, versionRepo } = createInMemoryRepos(users);
+    const documents = new DocumentService(docRepo, userRepo, versionRepo);
     now = new Date("2026-01-01T12:00:00Z");
     presence = new PresenceService(createInMemoryPresenceRepo(users), documents, () => now);
     docId = (await documents.create("alice", { title: "Plan" })).id;
