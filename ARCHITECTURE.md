@@ -43,19 +43,26 @@ access/policy.ts   DocumentRepository (port)
 - **Last write wins.** Two editors on the same document at the same time will overwrite each other's saves. Real-time collaboration (Yjs/CRDT) was deliberately cut; it is the biggest jump in complexity.
 - **Upload scope: .txt and .md into a new document.** Both convert cleanly to the editor's formats. Raw HTML in markdown is escaped. `.docx` was cut because it needs a heavier converter for marginal demo value.
 - **Export (stretch):** Markdown is generated client-side from the live editor with `turndown` (underline has no Markdown syntax, so it is kept as inline `<u>`). PDF uses `window.print()` plus a print stylesheet instead of a PDF library: zero extra dependencies, selectable text, and the browser handles pagination. The cost is one extra click in the print dialog ("Save as PDF").
-- **Title and content autosave independently** (two debounced channels), so a rename never races with a content save.
+- **Optimistic concurrency instead of real-time co-editing.** `Document.version` is incremented on every save and each `PATCH` must send `baseVersion`; the write is a single compare-and-set (`UPDATE ... WHERE version = ?`). A stale save returns 409 with who/when, and the UI asks the user to keep theirs or load the other version. This removes silent last-write-wins at a fraction of the cost of CRDTs (Yjs).
+- **Version history snapshots the pre-edit state, throttled.** Autosave fires about once per second, so a snapshot per save would flood history. The service keeps at most one snapshot per 5 minutes while editing, plus one before every restore (so restores are undoable). Previews render through the editor schema, never raw `innerHTML`.
+- **Presence by polling, persisted in Postgres.** Vercel functions are stateless, so in-memory presence or WebSockets would need another service. A heartbeat every 10 s upserts one row per user/document and returns viewers seen in the last 30 s. Up to 10 s to appear, 30 s to disappear; acceptable to show collaboration intent.
+- **Single serialized autosave channel.** Title and content changes are merged into one queue so the app never races itself on the document version (an earlier version had two independent channels; it had to change once versions existed).
 
 ## Intentionally deprioritized
 
-- Real-time co-editing and presence indicators
-- Comments, suggestions, version history
+- Real-time co-editing (CRDT); conflicts are detected and resolved by the user instead
+- Comments and suggestion mode
 - Real authentication, user sign-up, email notifications on share
 - Pagination/search on the document list
 - `.docx` import and attachments
 
 ## Next 2 to 4 hours
 
-1. Optimistic concurrency: send `updatedAt` with saves and warn on conflicts instead of silently overwriting.
-2. Version history (snapshot on save every N minutes) with restore.
+1. Playwright end-to-end tests (the scripted browser checks used during development) running in CI.
+2. Visual diff between a version and the current document.
 3. `.docx` import via `mammoth`.
-4. Playwright end-to-end test of the share flow in CI.
+4. Real-time co-editing with Yjs if collaboration becomes the core use case.
+
+## Delivery process
+
+After the core was deployed, the remaining improvements were delivered through an orchestrated PR flow: CI first (so every later change is verified), then the conflict/history PR (both touch the save path, so one PR), then presence (built in parallel by a sub-agent in its own git worktree, then integrated by the orchestrator, which resolved the schema conflict), then docs/screenshots. Every migration is additive so production data on Neon was never at risk. See the PRs linked in the README.
