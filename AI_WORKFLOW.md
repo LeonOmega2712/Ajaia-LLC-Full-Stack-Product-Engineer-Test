@@ -13,6 +13,8 @@
 - Drafting README and architecture notes from the actual code.
 - Running a headless browser smoke test of the full flow (create, format, autosave, share, view-only enforcement, import) and checking screenshots.
 
+- Orchestrating parallel work: one AI session acted as orchestrator while a sub-agent built the presence feature in its own git worktree. The orchestrator opened one PR per feature, resolved the merge conflict in `schema.prisma`, waited for green CI and merged in a planned order.
+
 ## What I changed or rejected
 
 - _[Edit with your own examples.]_ Example: the first version of the editor card used `overflow-hidden` together with a sticky toolbar, which pushed the toolbar down over the text. Caught from a screenshot during the smoke test and fixed.
