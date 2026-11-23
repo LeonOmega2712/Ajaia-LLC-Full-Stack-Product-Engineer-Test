@@ -17,6 +17,7 @@ Candidate: Jonathan Eduardo Muñoz Rodríguez
 | `AI_WORKFLOW.md` | AI tools used, what was changed or rejected, verification |
 | `VIDEO_URL.txt` | Walkthrough video link |
 | `docs/WALKTHROUGH.md` | Timestamped build log, Jonathan's interventions, video script |
+| `docs/CODE_MAP.md` | One-line responsibility of each main file, by layer |
 | `docs/screenshots/` | Screenshots of every main flow |
 | `docs/qa/QA-prod-2026-11-22.md` | Manual end-to-end QA report on production (pass/fail + bugs, all fixed) |
 | `.github/workflows/ci.yml` | CI pipeline |

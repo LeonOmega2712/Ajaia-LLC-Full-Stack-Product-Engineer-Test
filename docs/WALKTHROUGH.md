@@ -155,6 +155,7 @@ Running log of how this project was built, kept up to date during development. S
   3. **Medium (#4, minimal):** deleting a document now shows an error if it fails. Restore was already surfaced by the version history panel.
   4. **Low (#6):** sharing with an unknown email returns a generic message that does not echo the address or demo hints (the demo hint lives in the UI placeholder).
 - **Deferred as next steps** (refactors with no visible change, too risky right before recording): extract a `useDocumentSync` hook from `DocumentEditor`, share access checks and limits between server and UI, the `useAutosave` details, structured logging with request ids, and moving the remaining direct Prisma calls in login behind the user repository. Listed in `ARCHITECTURE.md`.
+- As part of the same review, **Jonathan asked for a code map** to review the code file by file: `docs/CODE_MAP.md`, one line of responsibility per main file, grouped by layer.
 
 ## Deliberately cut
 - Real-time co-editing (CRDT). Concurrent saves are detected (409) and resolved by the user instead.
@@ -191,6 +192,7 @@ Every decision and direction that came from Jonathan (times America/Mexico_City)
 | 8:37 PM | **Decided to run manual end-to-end QA on production with a real-browser agent before recording the video.** |
 | 8:44 PM | **Decided to apply every QA fix**, nits included, and to document the QA pass as part of his decisions. |
 | 9:04 PM | **Used a second AI (his local Claude) as an independent SOLID and good-practices auditor, and prioritized which findings to apply by value versus risk before recording** (transaction for save + snapshot, error body shape, delete feedback, generic share message; refactors deferred). |
+| 9:08 PM | **Asked for a code map (`docs/CODE_MAP.md`) as part of his review process**: one line per main file, grouped by layer. |
 
 ## AI usage notes (for AI_WORKFLOW.md)
 - Used Claude Code for scaffolding, implementation, tests, docs drafts and the scripted browser check.

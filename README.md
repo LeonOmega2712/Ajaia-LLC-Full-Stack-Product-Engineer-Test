@@ -90,4 +90,4 @@ src/lib/auth/           mocked session (signed cookie)
 tests/                  Vitest suites
 ```
 
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for decisions and tradeoffs and [AI_WORKFLOW.md](./AI_WORKFLOW.md) for how AI tools were used.
+See [docs/CODE_MAP.md](./docs/CODE_MAP.md) for a one-line summary of each main file, [ARCHITECTURE.md](./ARCHITECTURE.md) for decisions and tradeoffs and [AI_WORKFLOW.md](./AI_WORKFLOW.md) for how AI tools were used.
